@@ -108,6 +108,11 @@ function _update()
 	ship.x += ship.vx
 	ship.y += ship.vy
 	-- collision check
+	if ship.x < 0
+		or ship.x + 8 > 128 then
+		ship.state="crashed"
+		return
+	end
 	lx=ship.x+4
 	if ship.y + 8 > heightmap(planet.hmap,lx) then -- 8 is sprite width
 		if ship.vy < planet.crashvel
