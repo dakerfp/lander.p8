@@ -152,6 +152,7 @@ function _draw()
 	if ship.state == "crashed" then
 		print("game over", 48, 64)
 		spr(0,ship.x,ship.y)
+		print_blinking("press ❎ to restart", 30, 80)
 	else
 		if ship.state == "landed" then
 			print("landed!", 52, 64)
@@ -165,6 +166,13 @@ function _draw()
 end
 
 blink=0
+function print_blinking(s,x,y)
+	blink=(blink+1)%30
+	if blink > 15 then
+		print(s, x,y,7)
+	end
+end
+
 function draw_title()
 	cls(1)
 	rectfill(0,62,64,128,13)
@@ -172,13 +180,9 @@ function draw_title()
 	line(0,61,64,63,5)
 	line(96,68,128,69,5)
 	spr(64,32,32,8,8)
-	blink=(blink+1)%30
-	if blink > 15 then
-		print("press ❎ to start",30,16,7)
-	end
+	print_blinking("press ❎ to start",30,16)
 	print("landing",52,95,2)
 	print("landing",52+1,95+1,7)
-	
 	print("@dakerfp",95,121,2)
 	print("@dakerfp",95+1,121+1,7)
 end
