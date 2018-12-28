@@ -15,16 +15,60 @@ function has(l,o)
 	return false
 end
 
+function hmappair(hmap,x)
+	last = hmap[1]
+	for i=2,#hmap do
+		p = hmap[i]
+		if x < p.x then
+			return last, p
+		end
+		last = p
+	end
+	-- will fail
+end
+
+function islanding(hmap, x)
+	p0,p1=hmappair(hmap,x)
+	return p0.landing
+end
+
+function heightmap(f,x)
+	last, cur = hmappair(hmap,x)
+	t = (x-last.x)/(cur.x-last.x)
+	return last.y + t * (cur.y-last.y)
+end
+
+function genhmap(len,y0,vary)
+	hmap = {}
+	lpad=1+flr(rnd(len-1))
+	for i=1,len+1 do
+		landing = i==lpad
+		p = {
+			x=128 * (i-1) / len,
+			y=y0,
+			landing=landing
+		}
+		if not landing then
+			-- do not slope on landing pad
+			y0+=rnd(2*vary)-vary
+			y0=mid(64,y0,127)
+		end
+		add(hmap,p)
+	end
+	return hmap
+end
+
 function _init()
 	ship = {x=32,y=0,
 									vx=0,vy=0,
-									hthrust=0.2,
+									hthrust=0.1,
 									vthrust=0.2,
-									fuel=90,
-									fuelcons=0.2,
+									fuel=128,
+									fuelcons=1,
 									landed=false,
 									state="idle"}
-	planet = {floory=120,g=0.05,crashvel=1}
+	hmap = genhmap(16,120,10)
+	planet = {g=0.05,crashvel=1,hmap=hmap}
 end
 
 function _update()
@@ -64,11 +108,13 @@ function _update()
 	ship.x += ship.vx
 	ship.y += ship.vy
 	-- collision check
-	if ship.y + 8 > planet.floory then -- 8 is sprite width
-		if ship.vy > planet.crashvel then
-			ship.state="crashed"
-		else
+	lx=ship.x+4
+	if ship.y + 8 > heightmap(planet.hmap,lx) then -- 8 is sprite width
+		if ship.vy < planet.crashvel
+			and islanding(planet.hmap,lx) then
 			ship.state="landed"
+		else
+			ship.state="crashed"
 		end
 	end
 end
@@ -76,8 +122,14 @@ end
 function _draw()
 	cls()
 	-- landscape and hud	
-	line(0,0,ship.fuel,0)
-	line(0,planet.floory,128,planet.floory)
+	line(0,0,ship.fuel,0,8) -- red
+	last = planet.hmap[1]
+	for p in all(planet.hmap) do
+		c = 13 -- purple
+		if (last.landing) c=10 -- yellow
+		line(last.x,last.y,p.x,p.y,c)
+		last = p
+	end
 	-- ship
 	if ship.state == "crashed" then
 		print("game over", 48, 64)
